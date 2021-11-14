@@ -1,0 +1,167 @@
+<template>
+  <div class="doc-page">
+    <input class="item-input" type="text" placeholder="搜索"/>
+    <tabs class="tabs" onchange="changeTabactive">
+      <tab-bar mode="scrollable" class="tab-bar">
+        <text for="{{tabs}}" class="tab-text">{{$item}}</text>
+      </tab-bar>
+    </tabs>
+
+        <list if="{{listData.length > 0}}" class="item-container" id="list" onscrollbottom="scrollbottom">
+          <list-item  type="listItem" for="{{listData}}" class="item-content">
+            <div class="item-content-text">
+              <text class="item-title-1">{{$item.title.slice(0, 2)}}</text>
+              <text class="item-title-2">{{$item.title.slice(2)}}</text>
+              <text class="item-msg" lines="2" text-overflow="ellipsis">{{$item.desc}}</text>
+            </div>
+            <image src="{{$item.cover_img}}"></image>
+          </list-item>
+          <!-- 加载更多 -->
+          <list-item type="loadMore" class="load-more">
+            <progress type="circular"></progress>
+            <text>加载更多</text>
+          </list-item>
+        </list>
+        <list else class="item-container">
+          <list-item  type="listItem" for="{{listNone}}" class="item-content">
+            <div class="item-content-text">
+              <text class="placeholder-1"></text>
+              <text class="placeholder-2"></text>
+            </div>
+            <div class="placeholder-3"></div>
+          </list-item>
+        </list>
+  </div>
+</template>
+
+<script>
+  export default {
+    private: {
+      listData: [],
+      listNone: [0,1,2,3,4,5,6,7,8,9],
+      tabs: ['饮食与休闲','艺术与娱乐','健康','教育与交流','运动与保健','旅行','工作','家居与园艺','兴趣与手艺'],
+      currentPage: 1,
+      tabIndex: 0,
+    },
+    changeTabactive (e) {
+      // 切换tab
+      this.tabIndex = e.index;
+      this.listData=[];
+      this.requestList({type: this.tabs[e.index]}, (res) => {
+        setTimeout(() => {
+          this.listData = res.list;
+          this.currentPage = 1;
+        },1000);
+      });
+    },
+    scrollbottom() {
+      // 加载下一页
+      const type = this.tabs[this.tabIndex];
+      this.requestList({type, offset: this.currentPage}, (res) => {
+         setTimeout(() => {
+          this.listData = [].concat(this.listData, res.list);
+          this.currentPage += 1;
+        },1000);
+      });
+    },
+    requestList(params, callback) {
+      const { type, offset=0} = params;
+      $ajax.get(`https://wikihow.xiaozuowen.net/categories/${type}?size=10&offset=${offset*10}`).then((res) =>{
+        callback(res);
+      });
+    }
+  }
+</script>
+
+<style>
+  .doc-page{
+    flex: 1;
+    flex-direction: column;
+  }
+  .tabs {
+    flex: 1;
+    background-color: #ffffff;
+  }
+  .tab-content {
+    flex: 1;
+    height: 150px;
+  }
+  .tab-bar {
+    height: 100px;
+    border-color: #bbbbbb;
+    color: #bbbbbb;
+    border-bottom-width: 1px;
+  }
+  .tab-text {
+    padding: 0 20px;
+    text-align: center;
+  }
+  .tab-text:active {
+    color: #0faeff;
+  }
+  .item-container {
+    margin: 0 20px;
+    flex-direction: column;
+  }
+  .item-content {
+    height: 250px;
+    padding:20px 0;
+    border-bottom: 1px solid gray;
+  }
+  .item-content-text {
+    flex-direction: column; 
+    width: 420px;
+  }
+
+  .item-content image{
+    max-width: 250px;
+    max-height: 230px;
+    margin-left: 40px;
+  }
+  .item-title-1 {
+    font-size: 26px;
+  }
+  .item-title-2 {
+    color: #000000;
+    font-size: 40px;
+  }
+  .item-msg {
+    font-size: 30px;
+  }
+  .placeholder-1 {
+    width: 100px;
+    height: 40px;
+    border-radius: 20px;
+    background-color: gray;
+    margin-top:40px;
+  }
+  .placeholder-2{
+    width: 250px;
+    height: 32px;
+    border-radius: 16px;
+    background-color: gray;
+    margin-top:60px;
+  }
+  .placeholder-3{
+    width: 250px;
+    height: 210px;
+    background-color: gray;
+  }
+  .item-input {
+    height: 80px;
+    margin: 10px;
+    margin-bottom: 0px;
+    padding: 20px;
+    border-width: 1px;
+    border-color: #bbbbbb;
+    border-radius: 5px;
+    font-size: 30px;
+  }
+  .load-more {
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+    border-color: #bbbbbb;
+    border-bottom-width: 1px;
+  }
+</style>
